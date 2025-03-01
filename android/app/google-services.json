@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "599462936007",
+    "project_id": "messageme-app-af75a",
+    "storage_bucket": "messageme-app-af75a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599462936007:android:207dc785398e08b1a36de2",
+        "android_client_info": {
+          "package_name": "com.hardan.message_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0V1hlGoJfHij06lsxxNKSD0n9GHzU4Vk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599462936007:android:a97e2f334b4dfb1ba36de2",
+        "android_client_info": {
+          "package_name": "com.hardan.yourapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0V1hlGoJfHij06lsxxNKSD0n9GHzU4Vk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
