@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 final _firestore = FirebaseFirestore.instance;
+User? signedInUser;
 
 class ChatScreen extends StatefulWidget {
   static const screenRoute = 'chat_screen';
@@ -15,7 +16,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final MessageTextController = TextEditingController();
   final _auth = FirebaseAuth.instance;
-  late User signedInUser; //This will give us the email
+  final currentUser = signedInUser?.email;
+//This will give us the email
   String? messageText; // This will give us the message
   @override
   void initState() {
@@ -27,10 +29,11 @@ class _ChatScreenState extends State<ChatScreen> {
   void getCurrentUser() {
     try {
       final user = _auth.currentUser;
-      late User signedInUser;
+
       if (user != null) {
-        signedInUser = user;
-        print(signedInUser.email);
+        setState(() {
+          signedInUser = user;
+        });
       }
     } on Exception catch (e) {
       print(e);
@@ -110,12 +113,26 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 TextButton(
-                    onPressed: () {
-                      MessageTextController.clear();
-                      _firestore.collection('messages').add({
-                        'text': messageText,
-                        'sender': signedInUser.email,
-                      });
+                    onPressed: () async {
+                      if (messageText == null || messageText!.isEmpty) return;
+                      if (signedInUser == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please sign in first!'),
+                          ),
+                        );
+                        return;
+                      }
+                      try {
+                        await _firestore.collection('messages').add({
+                          'text': messageText,
+                          'sender': signedInUser!.email,
+                          'timestamp': FieldValue.serverTimestamp(),
+                        });
+                        MessageTextController.clear();
+                      } catch (e) {
+                        print("Error sending message: $e");
+                      }
                     },
                     child: Text(
                       'send',
@@ -134,24 +151,44 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 class MessageLine extends StatelessWidget {
-  const MessageLine({super.key, required this.text, required this.sender});
+  const MessageLine(
+      {super.key,
+      required this.text,
+      required this.sender,
+      required this.isMe});
   final String? text;
   final String? sender;
+  final bool isMe;
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Text(
             ' $sender',
-            style: TextStyle(fontSize: 12, color: Colors.black45),
+            style: TextStyle(fontSize: 12, color: Colors.yellow[900]),
           ),
           Material(
             elevation: 5,
-            borderRadius: BorderRadius.circular(30),
-            color: Colors.blue[800],
+            borderRadius: isMe
+                ? BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  )
+                : BorderRadius.only(
+                    topRight: Radius.circular(30),
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+            color: isMe
+                ? Colors.blue[800]
+                : isMe
+                    ? Colors.white
+                    : Colors.black45,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               child: Text(
@@ -186,9 +223,12 @@ class MessageStreamBuilder extends StatelessWidget {
         for (var message in messages) {
           final messageText = message.get('text');
           final messageSender = message.get('sender');
+          final currentUser = signedInUser?.email;
+
           final messageWidget = MessageLine(
             sender: messageSender,
             text: messageText,
+            isMe: currentUser == messageSender,
           );
           messageWidgets.add(messageWidget);
         }
