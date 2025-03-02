@@ -15,8 +15,8 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _auth = FirebaseAuth.instance;
-  late String email;
-  late String password;
+  String? email;
+  String? password;
   bool showSpinner = false;
   @override
   Widget build(BuildContext context) {
@@ -92,13 +92,25 @@ class _SignInScreenState extends State<SignInScreen> {
               MyBotton(
                   color: Colors.yellow[900]!,
                   title: 'sign in',
-                  onpressed: () {
-                    setState(() {
-                      showSpinner = true;
-                    });
+                  onpressed: () async {
+                    if (email == null || password == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please fill all fields'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() => showSpinner = true);
                     try {
-                      final user = _auth.signInWithEmailAndPassword(
-                          email: email, password: password);
+                      final user = await _auth.signInWithEmailAndPassword(
+                          email: email!, password: password!);
+
+                      if (user.user != null) {
+                        Navigator.pushNamed(context, ChatScreen.screenRoute);
+                      }
+                    } on FirebaseAuthException catch (e) {
                       Navigator.pushNamed(context, ChatScreen.screenRoute);
                       setState(() {
                         showSpinner = false;
