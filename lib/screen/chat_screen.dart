@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatScreen extends StatefulWidget {
   static const screenRoute = 'chat_screen';
@@ -10,8 +11,10 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
-
+  late User signedInUser; //This will give us the email
+  String? messageText; // This will give us the message
   @override
   void initState() {
     // TODO: implement initState
@@ -78,7 +81,9 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    onChanged: (value) {},
+                    onChanged: (value) {
+                      messageText = value;
+                    },
                     decoration: InputDecoration(
                         contentPadding:
                             EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -87,7 +92,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      _firestore.collection('messages').add({
+                        'text': messageText,
+                        'sender': signedInUser.email,
+                      });
+                    },
                     child: Text(
                       'send',
                       style: TextStyle(
